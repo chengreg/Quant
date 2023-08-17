@@ -9,9 +9,10 @@ import datetime
 import backtrader as bt
 from utils.tushareFeed import TushareData
 
+tt = bt.Trade
 
 # 策略类
-class TestStrategy(bt.Strategy):
+class SmaStrategy(bt.Strategy):
     params = (
         ('maperiod', 15),
     )
@@ -34,6 +35,10 @@ class TestStrategy(bt.Strategy):
         self.sma = bt.indicators.SimpleMovingAverage(self.datas[0], period=self.p.maperiod)
 
     def notify_order(self, order):
+        """
+        在订单状态发生变化时通知策略。当你在策略中提交订单（买入或卖出）并且这些订单的状态发生变化时，这个方法会被自动调用，允许你在订单状态变化时执行一些特定的操作和逻辑
+        :param order:一个backtrader.Order对象，代表订单
+        """
         # 检查订单状态是否为"Submitted"（已提交）或"Accepted"（已接受），如果是，则不做任何操作，直接返回
         if order.status in [order.Submitted, order.Accepted]:
             return
@@ -62,8 +67,8 @@ class TestStrategy(bt.Strategy):
 
     def notify_trade(self, trade):
         """
-        用于在交易关闭时被调用。它接受一个 trade 参数，该参数表示被关闭的交易对象
-        :param trade:该参数表示被关闭的交易对象
+        用于在每次交易完成后通知策略。当你的策略中的一个订单成交后，相应的notify_trade方法会被调用，提供有关交易的信息，如成交价格、数量、手续费等
+        :param trade:：一个backtrader.Trade对象，代表交易
         """
         # 如果交易没有被关闭
         if not trade.isclosed:
@@ -100,7 +105,7 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
     # 将一个策略添加到 Backtrader 的引擎中
-    cerebro.addstrategy(TestStrategy)
+    cerebro.addstrategy(SmaStrategy)
 
     # 自定义tushare的数据源(Data Feed)
     data = TushareData(dataname="601318.sh", fromdate=datetime.date(2023, 1, 1), todate=datetime.date(2023, 8, 1), )
